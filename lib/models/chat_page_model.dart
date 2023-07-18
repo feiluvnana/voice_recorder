@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class ChatPageModel extends ChangeNotifier {
   final FlutterSoundRecorder recorder = FlutterSoundRecorder();
@@ -47,8 +48,7 @@ class ChatPageModel extends ChangeNotifier {
   }
 
   Future<void> _initRecorder() async {
-    await recorder
-        .closeRecorder(); /*
+    await recorder.closeRecorder();
     if (await Permission.microphone.status == PermissionStatus.granted) {
       await recorder.openRecorder();
     } else if (await Permission.microphone.request() ==
@@ -56,11 +56,11 @@ class ChatPageModel extends ChangeNotifier {
       await recorder.openRecorder();
     } else {
       RecordingPermissionException("Permission was not granted");
-    }*/
+    }
     await recorder.openRecorder();
     await recorder.setSubscriptionDuration(const Duration(milliseconds: 10));
     recorderSub = recorder.onProgress?.listen((event) {
-      duration = event.duration;
+      duration = duration + const Duration(milliseconds: 10);
       recordTxt =
           "${duration.inMinutes < 10 ? "0${duration.inMinutes}" : duration.inMinutes}:${duration.inSeconds % 60 < 10 ? "0${duration.inSeconds % 60}" : duration.inSeconds % 60}";
       notifyListeners();
@@ -124,6 +124,7 @@ class ChatPageModel extends ChangeNotifier {
   }
 
   Future<void> seekPlay(double value) async {
+    if (!isPlaying) return;
     position =
         Duration(milliseconds: (value * duration.inMilliseconds).toInt());
     playTxt =
